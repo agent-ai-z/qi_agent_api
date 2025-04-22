@@ -1,0 +1,28 @@
+services:
+
+  agent-api-db:
+    container_name: agent-api-db
+    image: postgres:16.6
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - agent-api-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: agent-api
+      POSTGRES_USER: agent-api
+      POSTGRES_DB: agent-api
+    networks:
+      - agent-api-network
+
+volumes:
+  agent-api-db-data:
+
+networks:
+  agent-api-network:
+    name: agent-api-network
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.2.0/24

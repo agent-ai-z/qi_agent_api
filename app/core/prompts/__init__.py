@@ -2,9 +2,7 @@
 
 import os
 from datetime import datetime
-
 from app.core.config import settings
-
 
 def load_system_prompt():
     """Load the system prompt from the file."""
