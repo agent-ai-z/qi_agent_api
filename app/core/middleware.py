@@ -7,12 +7,11 @@ from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-from app.core.metrics import (
+from .metrics import (
     http_requests_total,
     http_request_duration_seconds,
-    db_connections,
+    db_connections
 )
-
 
 class MetricsMiddleware(BaseHTTPMiddleware):
     """Middleware for tracking HTTP request metrics."""

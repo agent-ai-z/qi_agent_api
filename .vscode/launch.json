@@ -1,0 +1,24 @@
+{
+    // Configurations for debugging FastAPI applications
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Agent API",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/app/main.py", // Replace with the entry point of your FastAPI app
+            "args": [
+                "run",
+                "--host",
+                "127.0.0.1",
+                "--port",
+                "8000"
+            ],
+            "jinja": true,
+            "console": "integratedTerminal",
+            "env": {
+                "APP_ENV": "development"
+            }
+        }
+    ]
+}

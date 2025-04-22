@@ -15,13 +15,10 @@ from fastapi import (
 )
 from fastapi.responses import StreamingResponse
 
-from app.api.v1.auth import get_current_session
-from app.core.config import settings
-from app.core.langgraph.graph import LangGraphAgent
-from app.core.limiter import limiter
-from app.core.logging import logger
-from app.models.session import Session
-from app.schemas.chat import (
+from .auth import get_current_session
+from core import settings, LangGraphAgent, limiter, logger
+from models import Session
+from schemas import (
     ChatRequest,
     ChatResponse,
     Message,
@@ -30,7 +27,6 @@ from app.schemas.chat import (
 
 router = APIRouter()
 agent = LangGraphAgent()
-
 
 @router.post("/chat", response_model=ChatResponse)
 @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["chat"][0])

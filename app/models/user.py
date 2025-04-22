@@ -11,7 +11,7 @@ from sqlmodel import (
     Relationship,
 )
 
-from app.models.base import BaseModel
+from .base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.session import Session
@@ -45,4 +45,4 @@ class User(BaseModel, table=True):
 
 
 # Avoid circular imports
-from app.models.session import Session  # noqa: E402
+from .session import Session  # noqa: E402

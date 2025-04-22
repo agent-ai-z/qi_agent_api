@@ -5,7 +5,7 @@ from typing import (
     AsyncGenerator,
     Dict,
     Literal,
-    Optional,
+    Optional
 )
 
 from asgiref.sync import sync_to_async
@@ -26,21 +26,60 @@ from langgraph.types import StateSnapshot
 from openai import OpenAIError
 from psycopg_pool import AsyncConnectionPool
 
-from app.core.config import (
+from ..config import (
     Environment,
     settings,
 )
-from app.core.langgraph.tools import tools
-from app.core.logging import logger
-from app.core.prompts import SYSTEM_PROMPT
-from app.schemas import (
+from .tools import tools
+from ..logging import logger
+from ..prompts import SYSTEM_PROMPT
+from schemas import (
     GraphState,
     Message,
 )
-from app.utils import (
+from utils import (
     dump_messages,
     prepare_messages,
 )
+
+def _get_model_kwargs() -> Dict[str, Any]:
+    """Get environment-specific model kwargs.
+
+    Returns:
+        Dict[str, Any]: Additional model arguments based on environment
+    """
+    model_kwargs = {}
+
+    # Development - we can use lower speeds for cost savings
+    if settings.ENVIRONMENT == Environment.DEVELOPMENT:
+        model_kwargs["top_p"] = 0.8
+
+    # Production - use higher quality settings
+    elif settings.ENVIRONMENT == Environment.PRODUCTION:
+        model_kwargs["top_p"] = 0.95
+        model_kwargs["presence_penalty"] = 0.1
+        model_kwargs["frequency_penalty"] = 0.1
+
+    return model_kwargs
+
+
+def _should_continue(state: GraphState) -> Literal["end", "continue"]:
+    """Determine if the agent should continue or end based on the last message.
+
+    Args:
+        state: The current agent state containing messages.
+
+    Returns:
+        Literal["end", "continue"]: "end" if there are no tool calls, "continue" otherwise.
+    """
+    messages = state.messages
+    last_message = messages[-1]
+    # If there is no function call, then we finish
+    if not last_message.tool_calls:
+        return "end"
+    # Otherwise if there is, we continue
+    else:
+        return "continue"
 
 
 class LangGraphAgent:
@@ -58,7 +97,7 @@ class LangGraphAgent:
             temperature=settings.DEFAULT_LLM_TEMPERATURE,
             api_key=settings.LLM_API_KEY,
             max_tokens=settings.MAX_TOKENS,
-            **self._get_model_kwargs(),
+            **_get_model_kwargs(),
         ).bind_tools(tools)
         self.tools_by_name = {tool.name: tool for tool in tools}
         self._connection_pool: Optional[AsyncConnectionPool] = None
@@ -66,27 +105,7 @@ class LangGraphAgent:
 
         logger.info("llm_initialized", model=settings.LLM_MODEL, environment=settings.ENVIRONMENT.value)
 
-    def _get_model_kwargs(self) -> Dict[str, Any]:
-        """Get environment-specific model kwargs.
-
-        Returns:
-            Dict[str, Any]: Additional model arguments based on environment
-        """
-        model_kwargs = {}
-
-        # Development - we can use lower speeds for cost savings
-        if settings.ENVIRONMENT == Environment.DEVELOPMENT:
-            model_kwargs["top_p"] = 0.8
-
-        # Production - use higher quality settings
-        elif settings.ENVIRONMENT == Environment.PRODUCTION:
-            model_kwargs["top_p"] = 0.95
-            model_kwargs["presence_penalty"] = 0.1
-            model_kwargs["frequency_penalty"] = 0.1
-
-        return model_kwargs
-
-    async def _get_connection_pool(self) -> AsyncConnectionPool:
+    async def _get_connection_pool(self) -> AsyncConnectionPool | None:
         """Get a PostgreSQL connection pool using environment-specific settings.
 
         Returns:
@@ -169,7 +188,7 @@ class LangGraphAgent:
         raise Exception(f"Failed to get a response from the LLM after {max_retries} attempts")
 
     # Define our tool node
-    async def _tool_call(self, state: GraphState) -> GraphState:
+    async def _tool_call(self, state: GraphState) -> dict[str, list[Any]]:
         """Process tool calls from the last message.
 
         Args:
@@ -190,24 +209,6 @@ class LangGraphAgent:
             )
         return {"messages": outputs}
 
-    def _should_continue(self, state: GraphState) -> Literal["end", "continue"]:
-        """Determine if the agent should continue or end based on the last message.
-
-        Args:
-            state: The current agent state containing messages.
-
-        Returns:
-            Literal["end", "continue"]: "end" if there are no tool calls, "continue" otherwise.
-        """
-        messages = state.messages
-        last_message = messages[-1]
-        # If there is no function call, then we finish
-        if not last_message.tool_calls:
-            return "end"
-        # Otherwise if there is, we continue
-        else:
-            return "continue"
-
     async def create_graph(self) -> Optional[CompiledStateGraph]:
         """Create and configure the LangGraph workflow.
 
@@ -221,7 +222,7 @@ class LangGraphAgent:
                 graph_builder.add_node("tool_call", self._tool_call)
                 graph_builder.add_conditional_edges(
                     "chat",
-                    self._should_continue,
+                    _should_continue,
                     {"continue": "tool_call", "end": END},
                 )
                 graph_builder.add_edge("tool_call", "chat")
@@ -264,7 +265,7 @@ class LangGraphAgent:
         messages: list[Message],
         session_id: str,
         user_id: Optional[str] = None,
-    ) -> list[dict]:
+    ) -> list[Message]:
         """Get a response from the LLM.
 
         Args:

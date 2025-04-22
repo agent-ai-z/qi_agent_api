@@ -19,32 +19,26 @@ from fastapi.security import (
     HTTPBearer,
 )
 
-from app.core.config import settings
-from app.core.limiter import limiter
-from app.core.logging import logger
-from app.models.session import Session
-from app.models.user import User
-from app.schemas.auth import (
+from core import settings, limiter, logger
+from models import Session, User
+from schemas import (
     SessionResponse,
-    TokenResponse,
     UserCreate,
     UserResponse,
 )
-from app.services.database import DatabaseService
-from app.utils.auth import (
+from services import DatabaseService
+from utils import (
     create_access_token,
     verify_token,
-)
-from app.utils.sanitization import (
     sanitize_email,
     sanitize_string,
     validate_password_strength,
 )
+from schemas import TokenResponse
 
 router = APIRouter()
 security = HTTPBearer()
 db_service = DatabaseService()
-
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),

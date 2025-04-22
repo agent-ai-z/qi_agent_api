@@ -19,7 +19,6 @@ from typing import (
 
 from dotenv import load_dotenv
 
-
 # Define environment types
 class Environment(str, Enum):
     """Application environment types.

@@ -21,13 +21,10 @@ from langfuse import Langfuse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from app.api.v1.api import api_router
-from app.core.config import settings
-from app.core.limiter import limiter
-from app.core.logging import logger
-from app.core.metrics import setup_metrics
-from app.core.middleware import MetricsMiddleware
-from app.services.database import database_service
+from api import api_router
+from core import settings, limiter, logger, setup_metrics, MetricsMiddleware
+from services import database_service
+from schemas import TokenResponse
 
 # Load environment variables
 load_dotenv()

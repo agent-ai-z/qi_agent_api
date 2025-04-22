@@ -13,10 +13,9 @@ from jose import (
     jwt,
 )
 
-from app.core.config import settings
-from app.core.logging import logger
-from app.schemas.auth import Token
-from app.utils.sanitization import sanitize_string
+from core import settings, logger
+from schemas import Token
+from .sanitization import sanitize_string
 
 
 def create_access_token(thread_id: str, expires_delta: Optional[timedelta] = None) -> Token:

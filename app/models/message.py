@@ -7,7 +7,7 @@ from sqlmodel import (
     Relationship,
 )
 
-from app.models.base import BaseModel
+from .base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.session import Session

@@ -15,16 +15,13 @@ from sqlmodel import (
     select,
 )
 
-from app.core.config import (
+from core import (
     Environment,
     settings,
+    logger
 )
-from app.core.logging import logger
-from app.models.message import Message
-from app.models.session import Session as ChatSession
-from app.models.user import User
-from app.schemas.chat import Message as PydanticMessage
-
+from models import Message, Session as ChatSession, User
+from schemas import Message as PydanticMessage
 
 class DatabaseService:
     """Service class for database operations.
