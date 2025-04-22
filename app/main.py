@@ -1,6 +1,9 @@
 """This file contains the main application entry point."""
 
 import os
+import uvicorn
+
+
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import (
@@ -24,7 +27,6 @@ from slowapi.errors import RateLimitExceeded
 from api import api_router
 from core import settings, limiter, logger, setup_metrics, MetricsMiddleware
 from services import database_service
-from schemas import TokenResponse
 
 # Load environment variables
 load_dotenv()
@@ -36,10 +38,23 @@ langfuse = Langfuse(
     host=os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com"),
 )
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Handle application startup and shutdown events."""
+    """
+    Handle the lifespan events of the FastAPI application.
+
+    This function is a coroutine that manages the startup and shutdown
+    events of the application. It logs the application startup details,
+    including the project name, version, and API prefix, and ensures
+    proper cleanup during shutdown.
+
+    Args:
+        app (FastAPI): The FastAPI application instance.
+
+    Yields:
+        None: This function is a generator used for managing the lifespan
+        of the application.
+    """
     logger.info(
         "application_startup",
         project_name=settings.PROJECT_NAME,
@@ -154,3 +169,7 @@ async def health_check(request: Request) -> Dict[str, Any]:
     status_code = status.HTTP_200_OK if db_healthy else status.HTTP_503_SERVICE_UNAVAILABLE
 
     return JSONResponse(content=response, status_code=status_code)
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("APP_PORT")), reload=True)
+

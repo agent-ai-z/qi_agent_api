@@ -62,7 +62,6 @@ def _get_model_kwargs() -> Dict[str, Any]:
 
     return model_kwargs
 
-
 def _should_continue(state: GraphState) -> Literal["end", "continue"]:
     """Determine if the agent should continue or end based on the last message.
 
