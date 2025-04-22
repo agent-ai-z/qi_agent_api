@@ -80,7 +80,6 @@ def _should_continue(state: GraphState) -> Literal["end", "continue"]:
     else:
         return "continue"
 
-
 class LangGraphAgent:
     """Manages the LangGraph Agent/workflow and interactions with the LLM.
 

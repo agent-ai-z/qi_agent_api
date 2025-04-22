@@ -128,11 +128,23 @@ app.add_middleware(
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-
 @app.get("/")
 @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["root"][0])
 async def root(request: Request):
-    """Root endpoint returning basic API information."""
+    """
+    Handles the root endpoint of the API.
+
+    This asynchronous function is triggered when the root endpoint is accessed.
+    It provides basic information about the API, including its name, version,
+    status, environment, and documentation URLs.
+
+    Args:
+        request (Request): The incoming HTTP request object.
+
+    Returns:
+        dict: A dictionary containing API metadata such as name, version, status,
+        environment, and links to Swagger and ReDoc documentation.
+    """
     logger.info("root_endpoint_called")
     return {
         "name": settings.PROJECT_NAME,
@@ -142,7 +154,6 @@ async def root(request: Request):
         "swagger_url": "/docs",
         "redoc_url": "/redoc",
     }
-
 
 @app.get("/health")
 @limiter.limit(settings.RATE_LIMIT_ENDPOINTS["health"][0])
